@@ -1,4 +1,6 @@
 # PROJECTO FINAL GRUPO 01. UNIVERSIDAD FIDELITAS
+import sqlite3
+
 def separator():
     x="-"*60
     return x
@@ -122,25 +124,44 @@ def facturacion():
         if a =="m":
             return menu_de_seleccion()
 
+#la funcion espacios ocupados cuenta cuantas entradas hay en cada horario 
+# 1 es el horario de las 8:00 am
+# 2 es el horario de las 10:00 am
+# 3 es el horario de las 12:00 md
+# 4 es el horario de las 2:00 pm
+def espacios_ocupados(num_horario):
+    conn = sqlite3.connect("elParaiso.db")
+    cursor = conn.cursor()
+    query = f"SELECT COUNT(num_reservacion) FROM reservas WHERE horario = {num_horario}"
+    cursor.execute(query)
+    datos = cursor.fetchall()
+    conn.commit()
+    conn.close()
+    return datos[0][0]
+
+
 def reservas():
     print(separator())
-    print ("El teleferico ofrece 4 horarios para que usted pueda disfrutar\n de los recorridos en zonas de las montañas, estos son los horarios:")
-    #espacios disponibles hipotéticos
-    print ("1: 8:00 am") #6 espacios
-    print ("2: 10:00 am") #6 espacios
-    print ("3: 12:00 md") #6 espacios
-    print ("4: 2:00 pm") #6 espacios
-    print(separator())
+    print ("El teleferico ofrece 4 horarios para que usted pueda disfrutar\nde los recorridos en zonas de las montañas. \n\nEstos son los horarios:\n")
     #En el futuro se determinan los espacios por medio de base de datos
-    espacios_8am = 6
-    espacios_10am = 6
-    espacios_12md = 6
-    espacios_2pm = 6
-    print(separator())
+    espacios_8am = 18-int(espacios_ocupados(1))
+    espacios_10am = 18-int(espacios_ocupados(2))
+    espacios_12md = 18-int(espacios_ocupados(3))
+    espacios_2pm = 18-int(espacios_ocupados(4))
+
+
+    print ("\t[1] 8:00 am\t",espacios_8am, "espacios disponibles") 
+    print ("\t[2] 10:00 am\t",espacios_10am, "espacios disponibles") 
+    print ("\t[3] 12:00 md\t",espacios_12md, "espacios disponibles") 
+    print ("\t[4] 2:00 pm\t",espacios_2pm, "espacios disponibles") 
+    print("\n",separator())
+    
     horario = input("Ingrese la opcion con el horario deseado: ")
     print(separator())
     numPersonas = int(input("Cúantas personas harán el Tour?: "))
     print(separator())
+
+
     if horario == "1" and numPersonas > espacios_8am:
         print("No hay espacios disponibles, seleccione otro horario")
         a = input("Presione cualquier tecla para volver al menu: ")
@@ -172,9 +193,6 @@ def reservas():
     
     elif horario == "4":
         return nueva_reservacion(numPersonas, espacios_2pm)
-
-def salir():
-    pass
 
 
 def nueva_reservacion(personitas, espacios):
