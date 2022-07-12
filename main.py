@@ -118,11 +118,11 @@ def facturacion():
         if a =="m":
             return facturacion()
     
-    def salir():
-        print(separator())
-        a = input("Presione la tecla m para volver al menu principal: ")
-        if a =="m":
-            return menu_de_seleccion()
+def salir():
+    print(separator())
+    a = input("Presione la tecla m para volver al menu principal: ")
+    if a =="m":
+        return menu_de_seleccion()
 
 #la funcion espacios ocupados cuenta cuantas entradas hay en cada horario 
 # 1 es el horario de las 8:00 am
@@ -168,7 +168,7 @@ def reservas():
         return menu_de_seleccion()
 
     elif horario == "1":
-        return  nueva_reservacion(numPersonas, espacios_8am)
+        return  nueva_reservacion(numPersonas)
 
     elif horario == "2" and numPersonas > espacios_10am:
         print("No hay espacios disponibles, seleccione otro horario")
@@ -176,7 +176,7 @@ def reservas():
         return menu_de_seleccion()
     
     elif horario == "2":
-        return nueva_reservacion(numPersonas, espacios_10am)
+        return nueva_reservacion(numPersonas)
 
     elif horario == "3" and numPersonas > espacios_12md:
         print("No hay espacios disponibles, seleccione otro horario")
@@ -184,7 +184,7 @@ def reservas():
         return menu_de_seleccion()
     
     elif horario == "3":
-        return nueva_reservacion(numPersonas, espacios_12md)
+        return nueva_reservacion(numPersonas)
 
     elif horario == "4" and numPersonas > espacios_2pm:
         print("No hay espacios disponibles, seleccione otro horario")
@@ -192,54 +192,45 @@ def reservas():
         return menu_de_seleccion()
     
     elif horario == "4":
-        return nueva_reservacion(numPersonas, espacios_2pm)
+        return nueva_reservacion(numPersonas)
+
+def conteoTeleferico():
+    conn = sqlite3.connect("elParaiso.db")
+    cursor = conn.cursor()
+    query = f"SELECT COUNT(teleferico), teleferico FROM reservas GROUP BY teleferico"
+    cursor.execute(query)
+    datos = cursor.fetchall()
+    conn.commit()
+    conn.close()
+    return datos
+
+def formulario_reservas(n, n_Asiento):
+    nombre=input("\nDigite el {}° nombre:\n".format(n))
+    numResrvacion=1
+    print("\nhola", nombre, "es?:")
+    print("1. Nacional")
+    print("2. Extranjero")
+    nacionalidad=int(input("\nDigite su selecion:\n"))
+    edad=int(input("Digite la edad:"))
+    print(separator())
 
 
-def nueva_reservacion(personitas, espacios):
+def nueva_reservacion(personitas):
     try:
-        n_Asiento = ["Teleferico 1 Asiento 1","Teleferico 1 Asiento 2","Teleferico 1 Asiento 3","Teleferico 1 Asiento 4","Teleferico 1 Asiento 5","Teleferico 1 Asiento 6","Teleferico 2 Asiento 1","Teleferico 2 Asiento 2","Teleferico 2 Asiento 3","Teleferico 2 Asiento 4","Teleferico 2 Asiento 5","Teleferico 2 Asiento 6","Teleferico 3 Asiento 1","Teleferico 3 Asiento 2","Teleferico 3 Asiento 3","Teleferico 3 Asiento 4","Teleferico 3 Asiento 5","Teleferico 3 Asiento 6"]
-        asiento = 18-espacios
-        persona = []
-        n = 1
-        total = 0 
-        while personitas > 0:          
-            nombre=input("\nDigite el {}° nombre:\n".format(n))
-            n += 1
-            numResrvacion=1
-            print("\nhola", nombre, "es?:")
-            print("1. Nacional")
-            print("2. Extranjero")
-            nacionalidad=int(input("\nDigite su selecion:\n"))
-            edad=int(input("Digite la edad:"))
-            print(separator())
-
-            if 65 > edad > 18 and nacionalidad == 2:
-                print("el monto a cancelar para", nombre, "son 7000 colones, ", n_Asiento[asiento])
-                asiento += 1
-                total = total+7000
-            elif 65 > edad > 18 and nacionalidad == 1:
-                print("el monto a cancelar para", nombre, "son 5000 colones", n_Asiento[asiento])
-                asiento += 1
-                total = total+5000
-            elif nacionalidad == 2:
-                print("el monto a cancelar para", nombre, "son 3500 colones", n_Asiento[asiento])
-                asiento += 1
-                total = total+3500
-            else:
-                print("el monto a cancelar para", nombre, "son 2500 colones", n_Asiento[asiento])
-                asiento += 1
-                total = total+2500
-            personitas -= 1 
-        print("\n", separator())
-        print("El tatal a cancelar por todo el grupo son", total, "colones", "n° de resevacion #", numResrvacion)
-        print("-----------------------------------------------------------------------------")
-        persona.append((nombre, edad, nacionalidad, 0, 0))       
-        #print(persona)
-        #El print es para saber que se guardo la informacion
-        a = input("Presione cualquier tecla para volver al menu: ")
-        return menu_de_seleccion()
-    except Exception as x:
-        print(x)
+        teleferico = conteoTeleferico()
+        print(teleferico)
+        #n_Asiento = ["Teleferico 1 Asiento 1","Teleferico 1 Asiento 2","Teleferico 1 Asiento 3","Teleferico 1 Asiento 4","Teleferico 1 Asiento 5","Teleferico 1 Asiento 6","Teleferico 2 Asiento 1","Teleferico 2 Asiento 2","Teleferico 2 Asiento 3","Teleferico 2 Asiento 4","Teleferico 2 Asiento 5","Teleferico 2 Asiento 6","Teleferico 3 Asiento 1","Teleferico 3 Asiento 2","Teleferico 3 Asiento 3","Teleferico 3 Asiento 4","Teleferico 3 Asiento 5","Teleferico 3 Asiento 6"]
+        # [(8, 1), (6, 2)]
+        if personitas <= teleferico[0][0] or personitas <= teleferico[1][0] or personitas <= teleferico[2][0]:
+            if personitas <= teleferico[0][0]:
+                formulario_reservas(1, teleferico[0][0]+1)
+                print("Teferico 1 Asiento",teleferico[0][0]+1)
+            elif personitas <= teleferico[1][0]:
+                print("Teferico 2 Asiento",teleferico[1][0]+1)
+            elif personitas <= teleferico[2][0]:
+                print("Teferico 3 Asiento",teleferico[2][0]+1)
+    except Exception as e:
+        print(e)
 try:
     menu()
 except:
