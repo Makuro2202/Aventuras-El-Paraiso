@@ -124,30 +124,35 @@ def salir():
     if a =="m":
         return menu_de_seleccion()
 
-#la funcion espacios ocupados cuenta cuantas entradas hay en cada horario 
-# 1 es el horario de las 8:00 am
-# 2 es el horario de las 10:00 am
-# 3 es el horario de las 12:00 md
-# 4 es el horario de las 2:00 pm
-def espacios_ocupados(num_horario):
-    conn = sqlite3.connect("elParaiso.db")
-    cursor = conn.cursor()
-    query = f"SELECT COUNT(num_reservacion) FROM reservas WHERE horario = {num_horario}"
-    cursor.execute(query)
-    datos = cursor.fetchall()
-    conn.commit()
-    conn.close()
-    return datos[0][0]
+# FUNCION CONSULTAR
+def consultar(query):#el parmetro query almacenara la consulta
+    conn = sqlite3.connect("elParaiso.db") # conecta con la base de datos
+    cursor = conn.cursor() # el cursor "selecionara" los registros que le indiqueca la consulta
+    cursor.execute(query) # ejecuta lo que le pasa el parametro query (la consulta)
+    datos = cursor.fetchall() # fetchall pasa la infomacion a la variable datos
+    conn.close() # cierra la coneccion con la base de datos
+    return datos
 
+# FUNCION ESPACIOS DISPONIBLES 
+# devuelve cuantos asientos hay para un determinado horario 
+#   1 es el horario de las 8:00 am
+#   2 es el horario de las 10:00 am
+#   3 es el horario de las 12:00 md
+#   4 es el horario de las 2:00 pm
+def espacios_disponibles(numero_de_horario):
+    q = f"SELECT COUNT(asiento) FROM reservas WHERE horario = {numero_de_horario}"
+    #q cuenta los asientos de un horario dado
+    t = 18 #numero total de espacios por horario 6 pasajeros 3 telefericos 18
+    o = consultar(q)[0][0] #asientos ocupados
+    return t-o #total menos ocupados da los disponibles
 
 def reservas():
     print(separator())
     print ("El teleferico ofrece 4 horarios para que usted pueda disfrutar\nde los recorridos en zonas de las montañas. \n\nEstos son los horarios:\n")
-    #En el futuro se determinan los espacios por medio de base de datos
-    espacios_8am = 18-int(espacios_ocupados(1))
-    espacios_10am = 18-int(espacios_ocupados(2))
-    espacios_12md = 18-int(espacios_ocupados(3))
-    espacios_2pm = 18-int(espacios_ocupados(4))
+    espacios_8am = espacios_disponibles(1)
+    espacios_10am = espacios_disponibles(2)
+    espacios_12md = espacios_disponibles(3)
+    espacios_2pm = espacios_disponibles(4)
 
 
     print ("\t[1] 8:00 am\t",espacios_8am, "espacios disponibles") 
@@ -158,79 +163,90 @@ def reservas():
     
     horario = input("Ingrese la opcion con el horario deseado: ")
     print(separator())
-    numPersonas = int(input("Cúantas personas harán el Tour?: "))
+    numPersonas = abs(int(input("Cúantas personas harán el Tour?: ")))
     print(separator())
 
 
-    if horario == "1" and numPersonas > espacios_8am:
+    if (horario == "1" and numPersonas > espacios_8am  
+    or horario == "2" and numPersonas > espacios_10am
+    or horario == "3" and numPersonas > espacios_12md
+    or horario == "4" and numPersonas > espacios_2pm):
         print("No hay espacios disponibles, seleccione otro horario")
         a = input("Presione cualquier tecla para volver al menu: ")
         return menu_de_seleccion()
 
-    elif horario == "1":
-        return  nueva_reservacion(numPersonas)
+    else:
+        nueva_reservacion(numPersonas, horario)
 
-    elif horario == "2" and numPersonas > espacios_10am:
-        print("No hay espacios disponibles, seleccione otro horario")
-        a = input("Presione cualquier tecla para volver al menu: ")
-        return menu_de_seleccion()
-    
-    elif horario == "2":
-        return nueva_reservacion(numPersonas)
+# la funcion asientos devuelve el numero de asientos de un teleferico n
+def asientos(n):
+    q=f"SELECT COUNT(teleferico) FROM reservas WHERE teleferico={n}"
+    # coenta cuantas veces aparece un registro en la tabla reservas de un teleferico n
+    return consultar(q)[0][0] #ej de la respuesta sin el [0][0] >>>[(6,)]
 
-    elif horario == "3" and numPersonas > espacios_12md:
-        print("No hay espacios disponibles, seleccione otro horario")
-        a = input("Presione cualquier tecla para volver al menu: ")
-        return menu_de_seleccion()
-    
-    elif horario == "3":
-        return nueva_reservacion(numPersonas)
+def ultima_reservacion():
+    q = f"SELECT DISTINCT num_reservacion FROM reservas ORDER BY num_reservacion DESC LIMIT 2"
+    x = consultar(q)
+    if x:
+        return x[0][0]
+    else:
+        return 0
 
-    elif horario == "4" and numPersonas > espacios_2pm:
-        print("No hay espacios disponibles, seleccione otro horario")
-        a = input("Presione cualquier tecla para volver al menu: ")
-        return menu_de_seleccion()
-    
-    elif horario == "4":
-        return nueva_reservacion(numPersonas)
-
-def conteoTeleferico():
-    conn = sqlite3.connect("elParaiso.db")
-    cursor = conn.cursor()
-    query = f"SELECT COUNT(teleferico), teleferico FROM reservas GROUP BY teleferico"
-    cursor.execute(query)
-    datos = cursor.fetchall()
-    conn.commit()
-    conn.close()
-    return datos
-
-def formulario_reservas(n, n_Asiento):
-    nombre=input("\nDigite el {}° nombre:\n".format(n))
-    numResrvacion=1
-    print("\nhola", nombre, "es?:")
-    print("1. Nacional")
-    print("2. Extranjero")
-    nacionalidad=int(input("\nDigite su selecion:\n"))
-    edad=int(input("Digite la edad:"))
-    print(separator())
-
-
-def nueva_reservacion(personitas):
+def nueva_reservacion(personitas, horario):
     try:
-        teleferico = conteoTeleferico()
-        print(teleferico)
-        #n_Asiento = ["Teleferico 1 Asiento 1","Teleferico 1 Asiento 2","Teleferico 1 Asiento 3","Teleferico 1 Asiento 4","Teleferico 1 Asiento 5","Teleferico 1 Asiento 6","Teleferico 2 Asiento 1","Teleferico 2 Asiento 2","Teleferico 2 Asiento 3","Teleferico 2 Asiento 4","Teleferico 2 Asiento 5","Teleferico 2 Asiento 6","Teleferico 3 Asiento 1","Teleferico 3 Asiento 2","Teleferico 3 Asiento 3","Teleferico 3 Asiento 4","Teleferico 3 Asiento 5","Teleferico 3 Asiento 6"]
-        # [(8, 1), (6, 2)]
-        if personitas <= teleferico[0][0] or personitas <= teleferico[1][0] or personitas <= teleferico[2][0]:
-            if personitas <= teleferico[0][0]:
-                formulario_reservas(1, teleferico[0][0]+1)
-                print("Teferico 1 Asiento",teleferico[0][0]+1)
-            elif personitas <= teleferico[1][0]:
-                print("Teferico 2 Asiento",teleferico[1][0]+1)
-            elif personitas <= teleferico[2][0]:
-                print("Teferico 3 Asiento",teleferico[2][0]+1)
+        num_reservacion=ultima_reservacion()+1
+        print("Numero de Resevacion", num_reservacion)
+        if personitas <= 6-asientos(1):
+            for i in range(personitas):
+                registro(1, num_reservacion, horario, asientos(1)+1)
+        elif personitas <= 6-asientos(2):
+            for i in range(personitas):
+                registro(2, num_reservacion, horario, asientos(2)+1)
+        elif personitas <= 6-asientos(3):
+            for i in range(personitas):
+                registro(3, num_reservacion, horario, asientos(3)+1)
+        else:
+            while personitas > 0 and asientos(1) < 6:
+                registro(1, num_reservacion, horario, asientos(1)+1)
+                personitas -=1
+            while personitas > 0 and asientos(2) < 6:
+                registro(2, num_reservacion, horario, asientos(1)+1)
+                personitas -=1
+            while personitas > 0 and asientos(3) < 6:
+                registro(3, num_reservacion, horario, asientos(1)+1)
+                personitas -=1
+            
     except Exception as e:
         print(e)
+
+def registro(teleferico, reservacion, horario, asiento):          
+            nombre=input("\nDigite un nombre o alias:\n")
+            numResrvacion=reservacion
+            print("\nhola", nombre, "es?:")
+            print("1. Nacional")
+            print("2. Extranjero")
+            nacionalidad=int(input("\nDigite su selecion:\n"))
+            edad=int(input("Digite la edad:"))
+            print("-----------------------------------------------------------------------------")
+            if 65 > edad > 18 and nacionalidad == 2:
+                monto = 7000
+            elif 65 > edad > 18 and nacionalidad == 1:
+                monto = 5000
+            elif nacionalidad == 2:
+                monto = 3500
+            else:
+                monto = 2500
+            print("el monto a cancelar para", nombre, "son", monto, "colones")
+            print("N° Resevacion",numResrvacion, "Teferico", teleferico, "Asiento",asiento)
+            registrar(numResrvacion, nombre, nacionalidad, edad, horario, teleferico, asiento,"22-02-93")
+
+def registrar(numResvacion, nombre, nacionalidad, edad, horario, teleferico, asiento, fecha):
+    conn = sqlite3.connect("elParaiso.db")
+    cursor = conn.cursor()
+    query = f"INSERT INTO reservas VALUES (NULL,{numResvacion},'{nombre}',{nacionalidad},{edad},{horario},{teleferico},{asiento},'{fecha}')"
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
 try:
     menu()
 except:

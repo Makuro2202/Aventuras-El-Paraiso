@@ -28,6 +28,8 @@ def readLast():
     conn.close()
     return datos
 
+# print(int(readLast()))
+
 def countEntris():
     conn = sqlite3.connect("elParaiso.db")
     cursor = conn.cursor()
@@ -104,7 +106,18 @@ def asientos(n):
     c=f"SELECT COUNT(teleferico) FROM reservas WHERE teleferico={n}"
     return consultar(c)[0][0] #ej [(6,)]
 
-print(asientos(1))
+# print(asientos(1))
+
+
+def readLast1():
+    q = f"SELECT DISTINCT num_reservacion FROM reservas ORDER BY num_reservacion DESC LIMIT 2"
+    x = consultar(q)
+    if x:
+        return x[0][0]
+    else:
+        return 0
+
+print(readLast1())
 lista = [
     (4,"Marco",1,29,1,1,1,"10/07/2022"),
     (4,"Diego",1,29,1,1,1,"10/07/2022"),
