@@ -19,6 +19,12 @@ def menu():
     print(menu)
     return menu_de_seleccion()
 
+def salir():
+    print(separator())
+    a = input("Presione la tecla m para volver al menu principal: ")
+    if a =="m":
+        return menu_de_seleccion()
+
 def menu_de_seleccion():
     print("""Menu de usuario, seleccione el modulo al que desea acceder
 
@@ -46,83 +52,8 @@ def menu_de_seleccion():
             print("Error Modo informes")
     elif seleccion == 4:
         salir()
-
-def informes():
-    print(separator())
-    a = input("Presione la tecla k para volver al menu: ")
-    if a =="k":
-        return menu_de_seleccion()
-    #
-    #Falta este modulo
-    #
-    return informes()
-
-def facturacion():
-    print("""Menu de facturación, seleccione la opción que desea
-
-    \t[1] Nacionales
-    \t[2] Extranjeros
-    \t[3] Salir
-    """)
-    print(separator())
-    seleccion = int(input("Digite una opcion: "))
-    if seleccion == 1:
-        try:
-            nacionales()
-        except:
-            pass
-    elif seleccion == 2:
-        try:
-            extranjeros()
-        except:
-            pass
-    elif seleccion == 3:
-        try:
-            salir()
-        except:
-            pass
-
-    def nacionales():
-        print(separator())
-    adultos1 = 5000
-    cantidad1 = int(input("Digite la cantidad de Adultos: "))
-    niñoadultomayor1 = 2500
-    cantidad2 = int(input("Digite la cantidad de niños y adultos mayores: "))
-    totaladultos = adultos1*cantidad1
-    totalniñosadultomayor = niñoadultomayor1*cantidad2
-    iva = 1.13
-    print("Monto Subtotal de adultos: ",totaladultos, "Monto subtotal de niños y Adultos Mayores: ",totalniñosadultomayor)
-    total = (totalniñosadultomayor+totaladultos)*iva
-    redondeo = round(total)
-    print("Gran Total: ",redondeo)
-    print(separator())
-    a = input("Presione la tecla m para volver al menu de facturación: ")
-    if a =="m":
-        return facturacion()
-
-    def extranjeros():
-        print(separator())
-        adultos2 = 7000
-        cantidad3 = int(input("Digite la cantidad de adultos Extranjeros es: "))
-        niñoadultomayor2 = 3500
-        cantidad4 = int(input("Digite la cantidad de niños y adultos mayores es: "))
-        totaladultos = adultos2*cantidad3
-        totalniñosadultomayor = niñoadultomayor2*cantidad4
-        iva = 1.13
-        print("Monto Subtotal de adultos: ",totaladultos, "Monto subtotal de niños y Adultos Mayores: ",totalniñosadultomayor)
-        total = (totalniñosadultomayor+totaladultos)*iva
-        redondeo = round(total)
-        print("Gran Total: ",redondeo)
-        print(separator())
-        a = input("Presione la tecla m para volver al menu de facturación: ")
-        if a =="m":
-            return facturacion()
     
-def salir():
-    print(separator())
-    a = input("Presione la tecla m para volver al menu principal: ")
-    if a =="m":
-        return menu_de_seleccion()
+
 
 # FUNCION CONSULTAR
 def consultar(query):#el parmetro query almacenara la consulta
@@ -165,7 +96,6 @@ def reservas():
     print(separator())
     numPersonas = abs(int(input("Cúantas personas harán el Tour?: ")))
     print(separator())
-
 
     if (horario == "1" and numPersonas > espacios_8am  
     or horario == "2" and numPersonas > espacios_10am
@@ -247,7 +177,70 @@ def registrar(numResvacion, nombre, nacionalidad, edad, horario, teleferico, asi
     cursor.execute(query)
     conn.commit()
     conn.close()
+
+def datos_factura(r):
+    c=f"SELECT nombre, edad, nacionalidad, num_reservacion FROM reservas WHERE num_reservacion={r}"
+    return consultar(c)
+
+def facturacion():
+    cliente = input("Ingrese el nombre de la persona a la que se le va a facturar:\n>>> ")
+    id_cliente = input("Digite el número de identificación:\n>>> ")
+    n_reservacion = int(input("ingrese el numero de reservación:\n>>> " ))
+    total=0
+    print("""
++--------------------------------------------------------------+
+|                     AVENTURAS EL PARAISO                     |
++--------------------------------------------------------------+
+    """)
+    print("N° Resevacion",n_reservacion)
+    codigo_horario = consultar(f"SELECT horario FROM reservas WHERE num_reservacion={n_reservacion}")[0][0]
+    if codigo_horario == 1:
+        horario = "8am"
+    elif codigo_horario == 1:
+        horario = "10am"
+    elif codigo_horario == 1:
+        horario = "12md"
+    else:
+        horario = "2pm"
+    print("Horario:",horario)
+    print("Cliente:", cliente)
+    print("Id:",id_cliente)
+    for r in datos_factura(n_reservacion):
+        nombre = r[0]
+        edad = r[1]
+        codigo_nacionalidad = r[2]
+        if codigo_nacionalidad == 1:
+            nacionalidad = "Nacional"
+        else:
+            nacionalidad = "Extrangero"
+        monto = 0
+        if 65 > edad > 18 and codigo_nacionalidad == 2:
+            monto = 7000
+        elif 65 > edad > 18 and codigo_nacionalidad == 1:
+            monto = 5000
+        elif codigo_nacionalidad == 2:
+            monto = 3500
+        else:
+            monto = 2500
+        total+=monto
+        print((nombre)+",",edad,"años\t\t\t", nacionalidad,"\t",monto)
+    iva = round(total*0.13)
+    print("\t\t\t\tIva\t",iva)
+    print("\t\t\t\tTOTAL\t", total+iva)
+
+
+def informes():
+    print(separator())
+    a = input("Presione la tecla k para volver al menu: ")
+    if a =="k":
+        return menu_de_seleccion()
+    #
+    #Falta este modulo
+    #
+    return informes()
+
 try:
     menu()
+
 except:
     print("Error en menu")
