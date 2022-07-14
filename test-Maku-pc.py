@@ -104,41 +104,41 @@ def consultar(query):
     conn.close()
     return datos
 
-def asientos(n):
-    c=f"SELECT COUNT(teleferico) FROM reservas WHERE teleferico={n}"
+def asientos(n, h):
+    c=f"SELECT COUNT(teleferico) FROM reservas WHERE teleferico={n} AND horaio = {h}"
     return consultar(c)[0][0] #ej [(6,)]
 
-# print(asientos(1))
+# print(asientos(1,1))
 
 def datos_factura(r):
     c=f"SELECT nombre, edad, nacionalidad, num_reservacion FROM reservas WHERE num_reservacion={r}"
     return consultar(c)
 
-# print(datos_factura(4))
+#print(datos_factura(4))
 
-# total=0
-# for r in datos_factura(4):
-#     nombre = r[0]
-#     edad = r[1]
-#     codigo_nacionalidad = r[2]
-#     if codigo_nacionalidad == 1:
-#         nacionalidad = "Nacional"
-#     else:
-#         nacionalidad = "Extrangero"
-#     monto = 0
-#     if 65 > edad > 18 and codigo_nacionalidad == 2:
-#         monto = 7000
-#     elif 65 > edad > 18 and codigo_nacionalidad == 1:
-#         monto = 5000
-#     elif codigo_nacionalidad == 2:
-#         monto = 3500
-#     else:
-#         monto = 2500
-#     total+=monto
-#     print((nombre)+",",edad,"años\t\t", nacionalidad,"\t",monto)
-# iva = round(total*0.13)
-# print("\t\t\t\tIva\t",iva)
-# print("\t\t\t\tTOTAL\t", total+iva)
+total=0
+for r in datos_factura(4):
+    nombre = r[0]
+    edad = r[1]
+    codigo_nacionalidad = r[2]
+    if codigo_nacionalidad == 1:
+        nacionalidad = "Nacional"
+    else:
+        nacionalidad = "Extrangero"
+    monto = 0
+    if 65 > edad > 18 and codigo_nacionalidad == 2:
+        monto = 7000
+    elif 65 > edad > 18 and codigo_nacionalidad == 1:
+        monto = 5000
+    elif codigo_nacionalidad == 2:
+        monto = 3500
+    else:
+        monto = 2500
+    total+=monto
+    print((nombre)+",",edad,"años\t\t", nacionalidad,"\t",monto)
+iva = round(total*0.13)
+print("\t\t\t\tIva\t",iva)
+print("\t\t\t\tTOTAL\t", total+iva)
 
 def readLast1():
     q = f"SELECT DISTINCT num_reservacion FROM reservas ORDER BY num_reservacion DESC LIMIT 2"
@@ -148,7 +148,7 @@ def readLast1():
     else:
         return 0
 
-print(readLast1())
+#print(readLast1())
 lista = [
     (4,"Marco",1,29,1,1,1,"10/07/2022"),
     (4,"Diego",1,29,1,1,1,"10/07/2022"),
@@ -156,9 +156,37 @@ lista = [
     (4,"Gustavo",1,29,1,1,1,"10/07/2022")
 ]
 
+# i = input("  [ N ] Nueva Factura    [ ⏎ ] Menu    [ X ] Salir\n")
+# if i == "x" or "X":
+#     exit()
+# print("Menu")
 
 #insertRows(lista)
 #print(readRow())
+
+def personas_horario(h):
+    c=f"SELECT COUNT(teleferico) FROM reservas WHERE horario = {h}"
+    return consultar(c)
+
+#print(personas_horario(1))
+
+def contar_tarifa_Adultos(n):
+    c=f"SELECT COUNT(teleferico) FROM reservas WHERE nacionalidad={n} AND edad  < 65 AND edad >18"
+    return consultar(c)
+
+def contar_tarifa_Ninos_Mayores(n):
+    c=f"SELECT COUNT(teleferico) FROM reservas WHERE nacionalidad={n} AND edad  > 65 OR edad < 18"
+    return consultar(c)
+
+# print(contar_tarifa_Adultos(1))
+# print(contar_tarifa_Ninos_Mayores(1))
+
+def horario_mayor():
+    c=f"SELECT COUNT(asiento), horario FROM reservas GROUP BY horario ORDER BY COUNT(asiento) DESC LIMIT 1"
+    return consultar(c)
+
+# print(horario_mayor())
+
 
 #print(
 """
@@ -188,6 +216,8 @@ lista = [
   +--------------------------------------------------------------+
   |                  Gracias por su visita                       |
   +--------------------------------------------------------------+
+
+
 ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 ║  First name            ║  Last name             ║  email                 ║  Address Line 1        ║  city                  ║  
 ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
