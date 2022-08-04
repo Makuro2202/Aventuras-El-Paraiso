@@ -148,7 +148,10 @@ def readLast1():
     else:
         return 0
 
-print(readLast1())
+#print(readLast1())
+
+x=[1, "t"]
+print(x[0])
 lista = [
     (4,"Marco",1,29,1,1,1,"10/07/2022"),
     (4,"Diego",1,29,1,1,1,"10/07/2022"),

@@ -1,6 +1,6 @@
 # PROJECTO FINAL GRUPO 01. UNIVERSIDAD FIDELITAS
-from ast import Pass
 import sqlite3
+import os
 
 def separator():
     x="-"*60
@@ -38,8 +38,8 @@ def menu_de_seleccion():
     elif seleccion == 2:
         try:
             facturacion()
-        except:
-            print("Error modo facturación")
+        except Exception as e:
+            print("Error modo facturación",e)
     elif seleccion == 3:
         try:
             informes()
@@ -47,11 +47,9 @@ def menu_de_seleccion():
             print("Error Modo informes", e)
     elif seleccion == 4:
         pass
-    
-
 
 # FUNCION CONSULTAR
-def consultar(query):#el parmetro query almacenara la consulta
+def consultar(query):#el parmetro query almacenara la consulta sql
     conn = sqlite3.connect("elParaiso.db") # conecta con la base de datos
     cursor = conn.cursor() # el cursor "selecionara" los registros que le indiqueca la consulta
     cursor.execute(query) # ejecuta lo que le pasa el parametro query (la consulta)
@@ -89,7 +87,7 @@ def reservas():
     
     horario = input("Ingrese la opcion con el horario deseado: ")
     print(separator())
-    numPersonas = abs(int(input("Cúantas personas harán el Tour?: ")))
+    numPersonas = int(input("Cúantas personas harán el Tour?: "))
     print(separator())
 
     if (horario == "1" and numPersonas > espacios_8am  
@@ -132,6 +130,7 @@ def nueva_reservacion(personitas, horario):
                 registro(3, num_reservacion, horario, asientos(3, horario)+1)
         else:
             while personitas > 0 and asientos(1, horario) < 6:
+                print("while")
                 registro(1, num_reservacion, horario, asientos(1, horario)+1)
                 personitas -=1
             while personitas > 0 and asientos(2, horario) < 6:
@@ -140,6 +139,8 @@ def nueva_reservacion(personitas, horario):
             while personitas > 0 and asientos(3, horario) < 6:
                 registro(3, num_reservacion, horario, asientos(3, horario)+1)
                 personitas -=1
+        input("\n\t[ ⏎ ] Enter para volver al menu\n\n")
+        menu_de_seleccion()
             
     except Exception as e:
         print(e)
@@ -149,7 +150,7 @@ def registro(teleferico, reservacion, horario, asiento):
             numResrvacion=reservacion
             print("\nhola", nombre, "es?:")
             print("1. Nacional")
-            print("2. Extranjero")
+            print("2. Extranjero/a")
             nacionalidad=int(input("\nDigite su selecion:\n"))
             edad=int(input("Digite la edad:"))
             print("-----------------------------------------------------------------------------")
@@ -164,8 +165,7 @@ def registro(teleferico, reservacion, horario, asiento):
             print("el monto a cancelar para", nombre, "son", monto, "colones")
             print("N° Resevacion",numResrvacion, "Teferico", teleferico, "Asiento",asiento)
             registrar(numResrvacion, nombre, nacionalidad, edad, horario, teleferico, asiento,"22-02-93")
-            input("\n\t[ ⏎ ] Enter para volver al menu\n\n")
-            menu_de_seleccion()
+            
 
 def registrar(numResvacion, nombre, nacionalidad, edad, horario, teleferico, asiento, fecha):
     conn = sqlite3.connect("elParaiso.db")
@@ -244,16 +244,8 @@ def contar_tarifa_Ninos_Mayores(n):
     return consultar(c)[0][0]
 
 def horario_mayor():
-    c=f"SELECT COUNT(asiento), horario FROM reservas GROUP BY horario ORDER BY COUNT(asiento) DESC LIMIT 1"
-    return consultar(c)[0][1]
-
-def horario_menor():
-    c=f"SELECT COUNT(asiento), horario FROM reservas GROUP BY horario ORDER BY COUNT(asiento) LIMIT 1"
-    return consultar(c)[0][1]
-
-def informes():
-    print("[ CANTIDAD TOTAL DE PERSONAS:",personas_total()[0][0],"]")
-    h_mayor = horario_mayor()
+    q = consultar(f"SELECT COUNT(asiento), horario FROM reservas GROUP BY horario ORDER BY COUNT(asiento) DESC LIMIT 1")
+    h_mayor = q[0][1]
     if h_mayor==1:
         h="8am"
     elif h_mayor==2:
@@ -262,33 +254,58 @@ def informes():
         h="12md"
     elif h_mayor==4:
         h="2pm"
-    print(f"[ Horoario con mayor cantidad de personas {h} ]")
+    print(f"Horario con mayor cantidad de persona(s):\n{h} con {q[0][0]}")
 
-    h_menor = horario_menor()
-    if h_menor==1:
+def horario_menor():
+    min_value = None
+
+    for i in range(1, 5):
+        x = consultar(f"SELECT COUNT(asiento) FROM reservas WHERE horario = {i}")[0][0]
+        if (min_value is None or x < min_value):
+            min_value = x
+            min_horario=i
+
+    if min_horario==1:
         m="8am"
-    elif h_menor==2:
+    elif min_horario==2:
         m="10am"
-    elif h_menor==3:
+    elif min_horario==3:
         m="12md"
-    elif h_menor==4:
+    elif min_horario==4:
         m="2pm"
-    print(f"[ Horoario con menor cantidad de personas {m} ]\n")
+    print(f"Horoario con menor cantidad de personas:\n{m} con {min_value} pesonas\n")
+
+def informes():
+    print("[ CANTIDAD TOTAL DE PERSONAS:",personas_total()[0][0],"]")
+    input()
+    
+    horario_mayor()
+    input()
+
+    horario_menor()
+    input()
+
     print("[  PERSONAS POR HORARIO Y TELEFERICO  ]")
     print("[8:am ",personas_horario(1)[0][0],"personas]")
     print("  Teleferico 1:",asientos(1,1),"pesonas")
     print("  Teleferico 2:",asientos(2,1),"pesonas")
     print("  Teleferico 3:",asientos(3,1),"pesonas\n")
 
-    print("[8:am ",personas_horario(2)[0][0],"personas]")
+    print("[10:am ",personas_horario(2)[0][0],"personas]")
     print(" Teleferico 1:",asientos(1,2),"pesonas")
     print(" Teleferico 2:",asientos(2,2),"pesonas")
     print(" Teleferico 3:",asientos(3,2),"pesonas\n")
     
-    print("[8:am ",personas_horario(3)[0][0],"personas]")
+    print("[12:md ",personas_horario(3)[0][0],"personas]")
     print(" Teleferico 1:",asientos(1,3),"pesonas")
     print(" Teleferico 2:",asientos(2,3),"pesonas")
     print(" Teleferico 3:",asientos(3,3),"pesonas\n")
+
+    print("[2:pm ",personas_horario(4)[0][0],"personas]")
+    print(" Teleferico 1:",asientos(1,4),"pesonas")
+    print(" Teleferico 2:",asientos(2,4),"pesonas")
+    print(" Teleferico 3:",asientos(3,4),"pesonas\n")
+    input()
 
     print("[  DINERO RECAUDADO  ]\n")
     c_adul_nac = contar_tarifa_Adultos(1)
@@ -306,8 +323,6 @@ def informes():
 
     input("\n\t[ ⏎ ] Enter  para volver al menu.")
     return menu_de_seleccion()
-
-
 
 try:
     menu()
